@@ -27,3 +27,7 @@ and delivers a daily HTML email digest every morning.
 2. Add your Google Gemini API key
 3. Add your Gmail credential
 4. Activate the workflow
+
+## Workflow Screenshot
+
+![n8n Daily News Digest Workflow](n8n-workflow.png)
