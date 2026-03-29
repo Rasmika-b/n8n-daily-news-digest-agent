@@ -1,0 +1,358 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "889db077-25a2-434c-adb4-a4760db25d9f",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://news.ycombinator.com/rss",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -64
+      ],
+      "id": "8af0529f-66e4-4e4a-9b74-b74bd2371858",
+      "name": "Hacker News"
+    },
+    {
+      "parameters": {
+        "url": "http://feeds.bbci.co.uk/news/rss.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        -224
+      ],
+      "id": "a29f66a8-817a-4b3f-a142-30b52cb90b17",
+      "name": "BBC News"
+    },
+    {
+      "parameters": {
+        "url": "https://techcrunch.com/feed/",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        256
+      ],
+      "id": "ee603ee9-ab3e-4d7f-bd6a-10bb5e0b0b32",
+      "name": "TechCrunch"
+    },
+    {
+      "parameters": {
+        "numberInputs": 4
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        528,
+        -16
+      ],
+      "id": "4da46d15-82ad-4d10-b8ab-3dfc2ecdf427",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "maxItems": 15
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        928,
+        16
+      ],
+      "id": "5230b42f-6000-4c74-80f4-3fb77c8eb776",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1136,
+        16
+      ],
+      "id": "04c902f0-85a9-459d-8594-16ea9f09d391",
+      "name": "Aggregate"
+    },
+    {
+      "parameters": {
+        "jsCode": "const aiOutput = $input.first().json.content.parts[0].text;\n\nconst html = `\n<html><body style=\"font-family:sans-serif;max-width:600px;margin:auto;color:#222\">\n  <h1 style=\"color:#1a1a2e\">📰 Your Daily News Digest</h1>\n  <p style=\"color:#888\">Generated on ${new Date().toDateString()} by your n8n agent</p>\n  <hr/>\n  ${aiOutput}\n  <hr/>\n  <small style=\"color:#aaa\">Powered by Gemini + n8n</small>\n</body></html>\n`;\n\nreturn [{ json: { html, subject: `News Digest — ${new Date().toDateString()}` } }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1744,
+        16
+      ],
+      "id": "3e5b97a7-88a9-4f17-9fad-75bb1883d3a8",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "sendTo": "rb5719@nyu.edu",
+        "subject": "={{ $json.subject }}",
+        "message": "={{ $json.html }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1968,
+        16
+      ],
+      "id": "c0f1b36c-c443-428b-983e-dccc73cbc485",
+      "name": "Send a message",
+      "webhookId": "2a18ea29-7648-4e58-84d7-9b8bd17a7b3f",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "XqWsDBSDgur0yQR2",
+          "name": "Gmail OAuth2 API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://feeds.npr.org/1001/rss.xml",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.rssFeedRead",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        96
+      ],
+      "id": "2dbc1b32-c4c8-42d9-bab7-f4fde8b7a48f",
+      "name": "NPR News"
+    },
+    {
+      "parameters": {
+        "jsCode": "const oneDayAgo = Date.now() - 24 * 60 * 60 * 1000;\n\nreturn $input.all().filter(item => {\n  const raw = item.json.pubDate || item.json.isoDate || item.json.published || '';\n  const parsed = new Date(raw).getTime();\n  return !isNaN(parsed) && parsed >= oneDayAgo;\n}).map(item => ({ json: item.json }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        736,
+        16
+      ],
+      "id": "42ceac60-e82a-488b-b4e9-e8f6f2ccec64",
+      "name": "Code in JavaScript1"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.5-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.5-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a news editor. Here are today's top articles:\n\n{{ $json.data.map(a => '- ' + a.title + ': ' + (a.contentSnippet || a.summary || '')).join('\\n') }}\n\nGroup them into 3-5 topic clusters. For each cluster write a 2-sentence summary. Output clean HTML using h2 tags for topics and p tags for summaries."
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1.1,
+      "position": [
+        1392,
+        16
+      ],
+      "id": "2ab9ab62-c675-49c2-8c13-a021ed0d58a8",
+      "name": "Message a model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "NZlKVeubcJgSBjdk",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "BBC News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Hacker News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "NPR News",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "TechCrunch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hacker News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "BBC News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TechCrunch": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 3
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit": {
+      "main": [
+        [
+          {
+            "node": "Aggregate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "NPR News": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 2
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript1": {
+      "main": [
+        [
+          {
+            "node": "Limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "0f932d6d-455b-41bc-8c22-002ae9117e50",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "ddfd5ee6ab251a08b4c5ea4663314658112333d04f78959d20225e1cd98b11de"
+  },
+  "id": "W1eumUQWxSsWw3fD",
+  "tags": []
+}
